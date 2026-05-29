@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: dhcrelay-vlan11
+  namespace: network
+  labels:
+    app: dhcrelay
+    vlan: "11"
+spec:
+  selector:
+    matchLabels:
+      app: dhcrelay
+      vlan: "11"
+  template:
+    metadata:
+      labels:
+        app: dhcrelay
+        vlan: "11"
+    spec:
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      nodeSelector:
+        kubernetes.io/hostname: k3s-01
+      tolerations:
+        - operator: Exists
+      containers:
+        - name: dhcrelay
+          image: ghcr.io/bsc-admin/dhcrelay:latest
+          # Same subnet as KEA — test this one carefully last
+          args: ["-i", "ens18.11", "10.54.11.211"]
+          securityContext:
+            capabilities:
+              add:
+                - NET_RAW
+                - NET_ADMIN
+          resources:
+            requests:
+              cpu: 5m
+              memory: 8Mi
+            limits:
+              cpu: 20m
+              memory: 16Mi
